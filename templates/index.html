@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Sniplink &mdash; Shorten a URL{% endblock %}
+{% block content %}
+  <section class="card">
+    <h1>Shorten a link</h1>
+    <p class="subtitle">Paste a long URL, optionally set an expiry, and get a short link plus a QR code &mdash; free, no upsell.</p>
+
+    {% if error %}
+      <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" class="form">
+      <label for="original_url">Long URL</label>
+      <input type="url" id="original_url" name="original_url" placeholder="https://example.com/some/very/long/path" required>
+
+      <div class="form-row">
+        <div>
+          <label for="expiry_days">Expire after N days (optional)</label>
+          <input type="number" id="expiry_days" name="expiry_days" min="1" placeholder="e.g. 7">
+        </div>
+        <div>
+          <label for="expiry_clicks">Expire after N clicks (optional)</label>
+          <input type="number" id="expiry_clicks" name="expiry_clicks" min="1" placeholder="e.g. 100">
+        </div>
+      </div>
+
+      <button type="submit">Shorten it</button>
+    </form>
+
+    {% if short_url %}
+      <div class="result">
+        <h2>Your short link is ready</h2>
+        <p class="short-url"><a href="{{ short_url }}">{{ short_url }}</a></p>
+        <div class="qr-block">
+          <img src="{{ qr_url }}" alt="QR code for {{ short_url }}" class="qr-img">
+          <a href="{{ qr_url }}/download" class="button" download>Download QR (PNG)</a>
+        </div>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}
