@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Sniplink &mdash; Dashboard{% endblock %}
+{% block content %}
+  <h1>Dashboard</h1>
+  <p class="subtitle">All shortened links, their hit counts, and expiry status.</p>
+
+  {% if not links %}
+    <p class="empty">No links yet. <a href="{{ url_for('index') }}">Create one</a>.</p>
+  {% else %}
+    <div class="table-wrap">
+      <table class="links-table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Original URL</th>
+            <th>Hits</th>
+            <th>Expiry rule</th>
+            <th>Last accessed</th>
+            <th>Last referrer</th>
+            <th>Status</th>
+            <th>QR</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for link in links %}
+            <tr>
+              <td><a href="{{ link.short_url }}">{{ link.code }}</a></td>
+              <td class="truncate" title="{{ link.original_url }}">{{ link.original_url }}</td>
+              <td>{{ link.hit_count }}{% if link.max_clicks %} / {{ link.max_clicks }}{% endif %}</td>
+              <td>
+                {% if link.expires_at %}by {{ link.expires_at[:19] }} UTC<br>{% endif %}
+                {% if link.max_clicks %}after {{ link.max_clicks }} clicks{% endif %}
+                {% if not link.expires_at and not link.max_clicks %}&mdash;{% endif %}
+              </td>
+              <td>{{ link.last_accessed_at[:19] if link.last_accessed_at else "never" }}</td>
+              <td class="truncate" title="{{ link.last_referrer or '' }}">{{ link.last_referrer or "&mdash;" }}</td>
+              <td>
+                {% if link.expired %}
+                  <span class="badge badge-expired">expired</span>
+                {% else %}
+                  <span class="badge badge-active">active</span>
+                {% endif %}
+              </td>
+              <td><a href="{{ url_for('qr_code_download', code=link.code) }}" download>PNG</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+{% endblock %}
