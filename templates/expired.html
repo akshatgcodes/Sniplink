@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Link expired &mdash; Sniplink{% endblock %}
+{% block content %}
+  <section class="card expired-card">
+    <div class="expired-icon">&#9203;</div>
+    <h1>This link has expired</h1>
+    <p class="subtitle">
+      The short link <strong>/{{ link.code }}</strong> is no longer active
+      {% if link.expires_at %}&mdash; it expired on {{ link.expires_at[:19] }} UTC{% endif %}
+      {% if link.max_clicks %}&mdash; it reached its {{ link.max_clicks }}-click limit{% endif %}.
+    </p>
+    <p><a href="{{ url_for('index') }}" class="button">Create a new short link</a></p>
+  </section>
+{% endblock %}
