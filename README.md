@@ -86,3 +86,7 @@ Sniplink/
 │   └── style.css
 └── .gitignore
 ```
+
+## Notes
+
+Built as a focused, single-purpose tool - a self-hosted URL shortener, nothing more, nothing less.
