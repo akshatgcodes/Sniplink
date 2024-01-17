@@ -287,3 +287,5 @@ if __name__ == "__main__":
 else:
     # Ensure the DB/table exist when imported (e.g. by tests) too.
     init_db()
+
+# Built incrementally - see git history for the development progression.
