@@ -5,3 +5,6 @@ instance/
 .env
 .venv/
 venv/
+
+# OS cruft
+.DS_Store
