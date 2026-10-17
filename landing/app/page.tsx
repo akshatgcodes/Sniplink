@@ -68,7 +68,7 @@ export default function Home() {
       <section className="bg-grid relative overflow-hidden border-b border-border-subtle">
         <div className="mx-auto flex max-w-5xl flex-col items-start gap-6 px-6 py-24 sm:py-32">
           <span className="rounded-full border border-border-subtle bg-surface px-3 py-1 text-xs font-medium text-foreground/60">
-            Self-hosted · Flask + SQLite
+            Self-hosted · Flask + PostgreSQL
           </span>
           <h1 className="max-w-2xl text-4xl font-semibold tracking-tight sm:text-6xl">
             Short links with an{" "}
@@ -80,12 +80,48 @@ export default function Home() {
             access time, and referrers per link — all from your own server,
             your own database.
           </p>
+          {/* Live shortener: posts straight to the Flask app on this host */}
+          <form
+            action="/app"
+            method="post"
+            className="flex w-full max-w-2xl flex-col gap-3 rounded-2xl border border-border-subtle bg-surface p-4"
+          >
+            <input
+              name="original_url"
+              type="url"
+              required
+              placeholder="https://example.com/a/very/long/link"
+              className="w-full rounded-lg border border-border-subtle bg-background px-4 py-3 text-sm placeholder:text-foreground/40 focus:border-accent focus:outline-none"
+            />
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <input
+                name="expiry_days"
+                type="number"
+                min="1"
+                placeholder="Expire after N days (optional)"
+                className="flex-1 rounded-lg border border-border-subtle bg-background px-4 py-2.5 text-sm placeholder:text-foreground/40 focus:border-accent focus:outline-none"
+              />
+              <input
+                name="expiry_clicks"
+                type="number"
+                min="1"
+                placeholder="…or N clicks (optional)"
+                className="flex-1 rounded-lg border border-border-subtle bg-background px-4 py-2.5 text-sm placeholder:text-foreground/40 focus:border-accent focus:outline-none"
+              />
+              <button
+                type="submit"
+                className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground transition-opacity hover:opacity-90"
+              >
+                Shorten
+              </button>
+            </div>
+          </form>
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <a
-              href="#dashboard"
+              href="/dashboard"
               className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground transition-opacity hover:opacity-90"
             >
-              See the dashboard
+              Open the live dashboard
             </a>
             <a
               href="#run-it"

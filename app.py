@@ -175,7 +175,7 @@ def sweep_expired_links(db):
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
-@app.route("/", methods=["GET", "POST"])
+@app.route("/app", methods=["GET", "POST"])
 def index():
     db = get_db()
     short_url = None
@@ -228,6 +228,13 @@ def index():
     return render_template(
         "index.html", short_url=short_url, qr_url=qr_url, error=error
     )
+
+
+@app.route("/")
+def landing():
+    # In production "/" is the landing page (landing/ static export, routed
+    # by vercel.json); locally, go straight to the app.
+    return redirect(url_for("index"))
 
 
 @app.route("/<code>")
