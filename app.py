@@ -15,6 +15,7 @@ import string
 from datetime import datetime, timedelta
 
 import qrcode
+from werkzeug.middleware.proxy_fix import ProxyFix
 from flask import (
     Flask,
     abort,
@@ -28,22 +29,55 @@ from flask import (
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE = os.path.join(BASE_DIR, "sniplink.db")
+# When DATABASE_URL is set (e.g. a hosted Postgres in production), links are
+# stored there; otherwise a local sniplink.db SQLite file is used.
+DATABASE_URL = os.environ.get("DATABASE_URL")
 CODE_ALPHABET = string.ascii_letters + string.digits
 CODE_LENGTH = 6
 
 app = Flask(__name__)
 app.config["DATABASE"] = DATABASE
+# Trust the hosting proxy's X-Forwarded-* headers so _external URLs (short
+# links, QR codes) use the public https:// host.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 
 # ---------------------------------------------------------------------------
 # Database helpers
 # ---------------------------------------------------------------------------
+class PostgresConnection:
+    """Thin wrapper so Postgres can be used with the same sqlite-style calls
+    (`?` placeholders, db.execute(...).fetchone(), dict-like rows)."""
+
+    def __init__(self, url):
+        import psycopg
+        from psycopg.rows import dict_row
+
+        self.conn = psycopg.connect(url, row_factory=dict_row)
+
+    def execute(self, sql, params=()):
+        return self.conn.execute(sql.replace("?", "%s"), params)
+
+    def commit(self):
+        self.conn.commit()
+
+    def close(self):
+        self.conn.close()
+
+
+def connect():
+    if DATABASE_URL:
+        return PostgresConnection(DATABASE_URL)
+    conn = sqlite3.connect(app.config["DATABASE"])
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    return conn
+
+
 def get_db():
-    """Return a per-request sqlite3 connection (rows behave like dicts)."""
+    """Return a per-request DB connection (rows behave like dicts)."""
     if "db" not in g:
-        g.db = sqlite3.connect(app.config["DATABASE"])
-        g.db.row_factory = sqlite3.Row
-        g.db.execute("PRAGMA foreign_keys = ON")
+        g.db = connect()
     return g.db
 
 
@@ -54,14 +88,14 @@ def close_db(exception=None):
         db.close()
 
 
-def init_db(database_path=None):
+def init_db():
     """Create the links table if it doesn't already exist."""
-    path = database_path or app.config["DATABASE"]
-    conn = sqlite3.connect(path)
+    conn = connect()
+    id_column = "SERIAL PRIMARY KEY" if DATABASE_URL else "INTEGER PRIMARY KEY AUTOINCREMENT"
     conn.execute(
-        """
+        f"""
         CREATE TABLE IF NOT EXISTS links (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_column},
             code TEXT UNIQUE NOT NULL,
             original_url TEXT NOT NULL,
             created_at TEXT NOT NULL,
@@ -283,7 +317,7 @@ def dashboard():
 
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True, port=5000)
+    app.run(debug=os.environ.get("FLASK_DEBUG") == "1", port=5000)
 else:
     # Ensure the DB/table exist when imported (e.g. by tests) too.
     init_db()
